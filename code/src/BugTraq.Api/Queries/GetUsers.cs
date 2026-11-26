@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using BugTraq.Api.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -28,18 +27,16 @@ namespace BugTraq.Api.Queries
         public class Handler : IRequestHandler<Query, List<Result>>
         {
             private readonly BugTraqContext _context;
-            private readonly IMapper _mapper;
         
-            public Handler(BugTraqContext context, IMapper mapper)
+            public Handler(BugTraqContext context)
             {
                 _context = context;
-                _mapper = mapper;
             }
             
             public async Task<List<Result>> Handle(Query request, CancellationToken cancellationToken)
             {
-                return await _mapper
-                    .ProjectTo<Result>(_context.Users)
+                return await _context.Users
+                    .Select(u => new Result { UserId = u.UserId, FirstName = u.FirstName, Surname = u.Surname })
                     .ToListAsync(cancellationToken);
             }
         }

@@ -31,7 +31,7 @@ namespace BugTraq.Api.Commands
             public string Status { get; set; }
         }
 
-        public class Handler : IRequestHandler<Command, Unit>
+        public class Handler : IRequestHandler<Command>
         {
             private readonly BugTraqContext _context;
 
@@ -40,14 +40,12 @@ namespace BugTraq.Api.Commands
                 _context = context;
             }
             
-            public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+            public async Task Handle(Command request, CancellationToken cancellationToken)
             {
                 var bug = new Bug(request.Title, request.Description, request.Status, request.UserId);
                 _context.Bugs.Add(bug);
                 
                 await _context.SaveChangesAsync(cancellationToken);
-                
-                return new Unit();
             }
         }
     }

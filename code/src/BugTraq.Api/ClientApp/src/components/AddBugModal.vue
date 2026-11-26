@@ -1,143 +1,79 @@
 <template>
   <div>
-    <b-button v-b-modal.addBugModal>Add Bug</b-button>
+    <BButton @click="visible = true">Add Bug</BButton>
 
-    <b-modal id="addBugModal" title="Add A Bug" size="lg" hide-footer v-on:hidden="modalHidden">
-      <div>
-        <b-alert v-model="success" variant="success" dismissible>
-          Bug has been added successfully
-        </b-alert>
-        <b-alert v-model="errored" variant="danger" dismissible>
-          Sorry an error has occured
-        </b-alert>
-        <b-form @submit="onSubmit" v-if="show" class="form-horizontal">
-          <b-form-group
-            id="title-group"
-            label="Title"
-            label-for="title"
-            label-cols="3"
-          >
-            <b-form-input
-              id="title"
-              v-model="form.title"
-              type="text"
-              required
-            ></b-form-input>
-          </b-form-group>
+    <BModal v-model="visible" title="Add A Bug" size="lg" no-footer @hidden="modalHidden">
+      <BAlert v-model="success" variant="success" dismissible>
+        Bug has been added successfully
+      </BAlert>
+      <BAlert v-model="errored" variant="danger" dismissible>
+        Sorry an error has occurred
+      </BAlert>
+      <BForm @submit.prevent="onSubmit" v-if="show" class="form-horizontal">
+        <BFormGroup label="Title" label-for="title" label-cols="3">
+          <BFormInput id="title" v-model="form.title" type="text" required/>
+        </BFormGroup>
 
-          <b-form-group
-            id="description-group"
-            label="Description"
-            label-for="description"
-            label-cols="3"
-          >
-            <b-form-input
-              id="description"
-              v-model="form.description"
-              type="text"
-              required
-            ></b-form-input>
-          </b-form-group>
+        <BFormGroup label="Description" label-for="description" label-cols="3">
+          <BFormInput id="description" v-model="form.description" type="text" required/>
+        </BFormGroup>
 
-          <b-form-group 
-            id="status-group" 
-            label="Status" 
-            label-for="status"
-            label-cols="3"
-          >
-            <b-form-select
-              id="status"
-              v-model="form.status"
-              :options="statuses"
-              required
-            ></b-form-select>
-          </b-form-group>
+        <BFormGroup label="Status" label-for="status" label-cols="3">
+          <BFormSelect id="status" v-model="form.status" :options="statusOptions" required/>
+        </BFormGroup>
 
-          <b-form-group
-            id="user-group"
-            label="Users"
-            label-for="user"
-            label-cols="3"
-          >
-            <users-dropdown v-model="form.userId"></users-dropdown>
-          </b-form-group>
-          <div class="float-right">
-            <b-button type="reset" variant="danger" class="mr-2" @click.prevent="close">Close</b-button>
-            <b-button type="submit" variant="primary">Submit</b-button>
-          </div>
-        </b-form>
-      </div>
-    </b-modal>
+        <BFormGroup label="Users" label-for="user" label-cols="3">
+          <UsersDropdown v-model="form.userId"/>
+        </BFormGroup>
+        <div class="float-end">
+          <BButton variant="danger" class="me-2" @click="visible = false">Close</BButton>
+          <BButton type="submit" variant="primary">Submit</BButton>
+        </div>
+      </BForm>
+    </BModal>
   </div>
 </template>
 
-<script>
-    import usersDropdown from "./UsersDropdown";
-    
-    export default {
-      components: {
-          usersDropdown
-      },
-      data() {
-        return {
-          form: {
-            title: '',
-            description: '',
-            status: null,
-            userId: null
-          },
-            statuses: [
-                { text: 'Select One...', value: null },
-                { text: 'New', value: 'new' },
-                { text: 'Active', value: 'active' },
-                { text: 'Resolved', value: 'resolved' },
-                { text: 'Closed', value: 'closed' }
-            ],
-          show: true,
-          users: [{ text: 'Select One...', value: null }],
-          errored: false,
-          success: false
-        }
-    },
-    methods: {
-      onSubmit(evt) {
-        evt.preventDefault();
-        let self = this;
-        this.axios
-          .post('http://localhost:5000/api/bugs', this.form)
-          .then(function() {
-              self.success = true;
-              self.reset();
-              self.$root.$emit("bug-added");
-          })
-          .catch(function () {
-            self.errored = true;
-          })          
-      },
-      modalHidden() {
-          this.reset();
-          this.resetAlerts();
-      },
-      reset() {     
-        // Reset our form values
-        this.form.title = '';
-        this.form.description = '';
-        this.form.status = null;
-        this.form.userId = null;
-        
-        // Trick to reset/clear native browser form validation state
-        this.show = false;
-        this.$nextTick(() => {
-            this.show = true
-        });          
-      },
-      resetAlerts() {
-          this.errored = false;
-          this.success = false;
-      },
-      close () {
-        this.$bvModal.hide("addBugModal");        
-      }      
+<script setup>
+  import { nextTick, reactive, ref } from 'vue'
+  import { BAlert, BButton, BForm, BFormGroup, BFormInput, BFormSelect, BModal } from 'bootstrap-vue-next'
+  import UsersDropdown from './UsersDropdown.vue'
+  import { statusOptions } from './statuses'
+  import api from '../api'
+
+  const emit = defineEmits(['bug-added'])
+
+  const visible = ref(false)
+  const form = reactive({ title: '', description: '', status: null, userId: null })
+  const show = ref(true)
+  const errored = ref(false)
+  const success = ref(false)
+
+  async function onSubmit() {
+    try {
+      await api.post('/bugs', form)
+      success.value = true
+      reset()
+      emit('bug-added')
+    } catch {
+      errored.value = true
     }
+  }
+
+  function modalHidden() {
+    reset()
+    errored.value = false
+    success.value = false
+  }
+
+  function reset() {
+    form.title = ''
+    form.description = ''
+    form.status = null
+    form.userId = null
+
+    // Trick to reset/clear native browser form validation state
+    show.value = false
+    nextTick(() => show.value = true)
   }
 </script>

@@ -1,20 +1,26 @@
 # BugTraq
 
-### Installation
-If you don't already have then install node, yarn and dotnet core
+### Requirements
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [Node.js](https://nodejs.org/) 20.19+ or 22.12+ (includes npm)
 
-https://blog.teamtreehouse.com/install-node-js-npm-windows
-
-https://yarnpkg.com/lang/en/docs/install/
-
-https://dotnet.microsoft.com/download
-
+### Running
 ```sh
-$ cd [CloneFolder]/code/src/buqtraq.api/ClientApp
-$ yarn install
+$ cd [CloneFolder]/code/src/BugTraq.Api/ClientApp
+$ npm install
 $ cd ..
 $ dotnet run
 ```
 
-The application will then start up and when ready present you with a 
-URL to the site, click or copy and paste this URL into your browser
+Open http://localhost:5080. In development, ASP.NET Core starts the Vite dev
+server (http://localhost:5173) for you and redirects the browser to it; API
+calls are proxied back to the .NET app.
+
+### Tests
+```sh
+$ cd [CloneFolder]/code
+$ dotnet test
+```
+
+### Publishing
+`dotnet publish` builds the Vue app and serves it from `wwwroot`.

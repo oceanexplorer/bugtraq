@@ -1,27 +1,17 @@
-import '@babel/polyfill'
-import 'mutationobserver-shim'
-import Vue from 'vue'
-import './plugins/bootstrap-vue'
+import { createApp } from 'vue'
+import { createBootstrap } from 'bootstrap-vue-next'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faAddressCard, faBug, faPenToSquare, faTable, faTrash, faUser } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
 import App from './App.vue'
-import VueLodash from 'vue-lodash'
-import axios from 'axios'
-import VueAxios from 'vue-axios'
-import {library} from '@fortawesome/fontawesome-svg-core'
-import {fas} from '@fortawesome/free-solid-svg-icons'
-import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import router from './router'
 
-library.add(fas);
+library.add(faAddressCard, faBug, faPenToSquare, faTable, faTrash, faUser)
 
-Vue.component('font-awesome-icon', FontAwesomeIcon);
-
-Vue.config.productionTip = false;
-Vue.use(VueLodash);
-Vue.use(VueAxios, axios);
-
-new Vue({
-    router,
-    render: h => h(App)
-}).$mount('#app');
-
-
+createApp(App)
+    .use(createBootstrap())
+    .use(router)
+    .component('font-awesome-icon', FontAwesomeIcon)
+    .mount('#app')

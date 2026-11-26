@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 using BugTraq.Api.Models;
 using FluentValidation;
@@ -23,7 +23,7 @@ namespace BugTraq.Api.Commands
             public string Status { get; set; }
         }
 
-        public class Handler : AsyncRequestHandler<Command>
+        public class Handler : IRequestHandler<Command>
         {
             private readonly BugTraqContext _context;
 
@@ -31,11 +31,15 @@ namespace BugTraq.Api.Commands
             {
                 _context = context;
             }
-            protected override async Task Handle(Command request, CancellationToken cancellationToken)
+            public async Task Handle(Command request, CancellationToken cancellationToken)
             {
-                var ticket = await _context.Bugs.FindAsync(request.Id);
-                ticket.Status = request.Status;
+                var ticket = await _context.Bugs.FindAsync([request.Id], cancellationToken);
+                if (ticket == null)
+                {
+                    return;
+                }
 
+                ticket.Status = request.Status;
                 await _context.SaveChangesAsync(cancellationToken);
             }
         }

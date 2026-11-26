@@ -1,13 +1,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
-using BugTraq.Api.Mappers;
 using BugTraq.Api.Models;
 using BugTraq.Api.Queries;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Moq;
 using Xunit;
 
 namespace BugTraq.Api.Tests.Queries.Users
@@ -15,15 +12,12 @@ namespace BugTraq.Api.Tests.Queries.Users
     public class QueryFacts
     {
         private DbContextOptions<BugTraqContext> _inMemoryDbOptions;
-        private readonly IMapper _mapper;
 
         public QueryFacts()
         {
            _inMemoryDbOptions = new DbContextOptionsBuilder<BugTraqContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
-           
-           _mapper = new MapperConfiguration(cfg => { cfg.AddProfile(new UserProfile()); }).CreateMapper();
         }
         
         public class GetUsersQuery : QueryFacts
@@ -48,8 +42,8 @@ namespace BugTraq.Api.Tests.Queries.Users
                 // Act
                 await using (var dbContext = new BugTraqContext(_inMemoryDbOptions))
                 {
-                    var bugs = await new GetUsers.Handler(dbContext,  _mapper)
-                        .Handle(getUsersQuery, It.IsAny<CancellationToken>());
+                    var bugs = await new GetUsers.Handler(dbContext)
+                        .Handle(getUsersQuery, CancellationToken.None);
                     
                     // Assert
                     bugs.Count.Should().Be(3, "because three records were added to the database so three should have been returned");

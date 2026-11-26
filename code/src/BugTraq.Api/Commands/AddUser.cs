@@ -1,7 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using BugTraq.Api.Models;
-using BugTraq.Api.Queries;
 using FluentValidation;
 using MediatR;
 
@@ -27,7 +26,7 @@ namespace BugTraq.Api.Commands
             public string Surname { get; set;}
         }
 
-        public class Handler : IRequestHandler<Command, Unit>
+        public class Handler : IRequestHandler<Command>
         {
             private readonly BugTraqContext _context;
 
@@ -35,14 +34,12 @@ namespace BugTraq.Api.Commands
             {
                 _context = context;
             }
-            public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+            public async Task Handle(Command request, CancellationToken cancellationToken)
             {
                 var user = new User(request.FirstName, request.Surname);
                 _context.Users.Add(user);
                 
                 await _context.SaveChangesAsync(cancellationToken);
-
-                return new Unit();
             }
         }
     }

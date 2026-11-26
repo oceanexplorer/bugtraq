@@ -29,7 +29,7 @@ namespace BugTraq.Api.Commands
             }
         }
 
-        public class Handler : AsyncRequestHandler<Command>
+        public class Handler : IRequestHandler<Command>
         {
             private readonly BugTraqContext _context;
 
@@ -37,9 +37,9 @@ namespace BugTraq.Api.Commands
             {
                 _context = context;
             }
-            protected override async Task Handle(Command request, CancellationToken cancellationToken)
+            public async Task Handle(Command request, CancellationToken cancellationToken)
             {
-                var bug = await _context.Bugs.FindAsync(request.Id);
+                var bug = await _context.Bugs.FindAsync([request.Id], cancellationToken);
 
                 if (bug != null)
                 {

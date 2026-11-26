@@ -2,208 +2,143 @@
     <div>
         <div class="row mb-3">
             <div class="col-6">
-                <b-button-group>
-                    <b-button @click="displayMethod = 'cards'">
+                <BButtonGroup>
+                    <BButton @click="displayMethod = 'cards'" aria-label="Card view">
                         <font-awesome-icon icon="address-card"/>
-                    </b-button>
-                    <b-button @click="displayMethod = 'table'">
+                    </BButton>
+                    <BButton @click="displayMethod = 'table'" aria-label="Table view">
                         <font-awesome-icon icon="table"/>
-                    </b-button>
-                </b-button-group>
+                    </BButton>
+                </BButtonGroup>
             </div>
             <div class="col-6">
-                <add-bug-modal class="float-right pl-2"></add-bug-modal>
+                <AddBugModal class="float-end ps-2" @bug-added="getTickets"/>
             </div>
         </div>
         <div class="row" v-if="displayMethod === 'cards'">
-            <div class="col" v-bind:key="status" v-for="(tickets, status) in statuses">
-                <b-card class="h-100">
-                    <template v-slot:header>
-                        <h6 class="mb-0">{{ status | capitalize }}</h6>
+            <div class="col" :key="status" v-for="(tickets, status) in statuses">
+                <BCard class="h-100">
+                    <template #header>
+                        <h6 class="mb-0">{{ capitalize(status) }}</h6>
                     </template>
-                    <b-card-text>
-                        <div class="d-flex justify-content-center mb-3" v-if="loading === true">
-                            <b-spinner label="Loading..."></b-spinner>
-                        </div>
-                        <draggable
-                                :list="statuses[status]"
-                                @change="onChange($event, status)"
-                                class=dragArea
-                                v-bind="dragOptions"
-                        >
-                            <b-card class="mb-2 draggable draggable-card" v-bind:key="ticket.bugId"
-                                    v-for="ticket in statuses[status]">
-                                <h6 class="text-left">{{ ticket.title }}</h6>
-                                <b-card-text>
-                                    <div class="row">
-                                        <div class="col text-left">
-                                            <font-awesome-icon class="text-primary" icon="user"/>
-                                            <span class="pl-3">{{ ticket.userFirstName }} {{ ticket.userSurname }}</span>
-                                        </div>
+                    <div class="d-flex justify-content-center mb-3" v-if="loading">
+                        <BSpinner label="Loading..."/>
+                    </div>
+                    <draggable
+                            :list="tickets"
+                            @change="onChange($event, status)"
+                            class="dragArea"
+                            item-key="bugId"
+                            group="description"
+                            :animation="150"
+                    >
+                        <template #item="{ element: ticket }">
+                            <BCard class="mb-2 draggable draggable-card">
+                                <h6 class="text-start">{{ ticket.title }}</h6>
+                                <div class="row">
+                                    <div class="col text-start">
+                                        <font-awesome-icon class="text-primary" icon="user"/>
+                                        <span class="ps-3">{{ ticket.userFirstName }} {{ ticket.userSurname }}</span>
                                     </div>
-                                    <div class="row">
-                                        <div class="col text-right">
-                                            <a @click="showEditBugModal(ticket.bugId)" class="cursor-pointer pr-2"
-                                               href="#">
-                                                <font-awesome-icon class="text-primary cursor-pointer" icon="edit"/>
-                                            </a>
-                                            <a @click="showDeleteConfirmationModal(ticket.bugId)" class="cursor-pointer"
-                                               href="#">
-                                                <font-awesome-icon class="text-danger cursor-pointer" icon="trash"/>
-                                            </a>
-                                        </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col text-end">
+                                        <a @click.prevent="showEditBugModal(ticket.bugId)" class="pe-2" href="#"
+                                           aria-label="Edit bug">
+                                            <font-awesome-icon class="text-primary" icon="pen-to-square"/>
+                                        </a>
+                                        <a @click.prevent="showDeleteConfirmation(ticket.bugId)" href="#"
+                                           aria-label="Delete bug">
+                                            <font-awesome-icon class="text-danger" icon="trash"/>
+                                        </a>
                                     </div>
-                                </b-card-text>
-                            </b-card>
-                        </draggable>
-                    </b-card-text>
-                </b-card>
+                                </div>
+                            </BCard>
+                        </template>
+                    </draggable>
+                </BCard>
             </div>
         </div>
         <div class="row" v-if="displayMethod === 'table'">
             <div class="col">
-                <b-table :items="combineTickets" :fields="fields"></b-table>
+                <BTable :items="allTickets" :fields="fields"/>
             </div>
         </div>
-        <edit-bug-modal :bugId="idForEdit" :show-button="false" class="float-right"></edit-bug-modal>
+        <EditBugModal v-model:visible="editVisible" :bug-id="idForEdit" @bug-updated="getTickets"/>
+        <BModal v-model="deleteVisible" title="Delete bug" ok-variant="danger" ok-title="Delete" @ok="deleteTicket">
+            Are you sure you want to delete this bug?
+        </BModal>
     </div>
 </template>
 
-<script>
-    import draggable from "vuedraggable";
-    import editBugModal from "./EditBugModal";
-    import AddBugModal from "./AddBugModal";
+<script setup>
+    import { computed, onMounted, reactive, ref } from 'vue'
+    import { BButton, BButtonGroup, BCard, BModal, BSpinner, BTable } from 'bootstrap-vue-next'
+    import draggable from 'vuedraggable'
+    import EditBugModal from './EditBugModal.vue'
+    import AddBugModal from './AddBugModal.vue'
+    import api from '../api'
 
-    export default {
-        name: "grid",
-        components: {
-            AddBugModal,
-            draggable,
-            editBugModal
-        },
-        computed: {
-            dragOptions() {
-                return {
-                    animation: 150,
-                    group: "description"
-                };
-            },
-            combineTickets(){
-                let tickets = [];
-                let self = this;
-                Object.entries(this.statuses).forEach(entry => {
-                    let status = entry[0];
-                    tickets = tickets.concat(self.statuses[status]);
-                });
-                return tickets;
-            }
-        },
-        data: function () {
-            return {
-                displayMethod: "cards",
-                statuses: {
-                    new: [],
-                    active: [],
-                    resolved: [],
-                    closed: []
-                },
-                isDragging: false,
-                loading: true,
-                info: null,
-                tickets: {},
-                ticketsByStatus: {},
-                deleteConfirmation: {
-                    result: null
-                },
-                idForEdit: null,
-                fields: [
-                    {
-                        key: 'title',
-                        sortable: true
-                    },
-                    {
-                        key: 'status',
-                        sortable: true
-                    },
-                    {
-                        key: 'userFirstName',
-                        label: 'First Name',
-                        sortable: true
-                    },
-                    {
-                        key: 'userSurname',
-                        label: 'Surname',
-                        sortable: true
-                    }
-                ],
-            };
-        },
-        filters: {
-            capitalize: function (value) {
-                if (!value) return "";
-                value = value.toString();
-                return value.charAt(0).toUpperCase() + value.slice(1);
-            }
-        },
-        methods: {
-            onChange(event, newStatus) {
-                if (event.added) {
-                    this.updateTicket(event.added.element.bugId, newStatus);
-                }
-            },
-            filterByProperty(collection, propertyName, propertyValue) {
-                return this._.filter(collection, (item) => {
-                    return item[propertyName].toLowerCase() === propertyValue.toLowerCase()
-                });
-            },
-            getTickets() {
-                this.axios
-                    .get('http://localhost:5000/api/bugs')
-                    .then(response => this.loadTickets(response.data))
-                    .finally(() => this.loading = false);
-            },
-            loadTickets(tickets) {
-                Object.entries(this.statuses).forEach(entry => {
-                    let status = entry[0];
-                    this.statuses[status] = this.filterByProperty(tickets, 'status', status);
-                });
-            },
-            showDeleteConfirmationModal(id) {
-                this.$bvModal.msgBoxConfirm("Are you sure you want to delete this bug?")
-                    .then(okToDelete => {
-                        if (okToDelete) {
-                            this.deleteTicket(id);
-                        }
-                    });
+    const displayMethod = ref('cards')
+    const statuses = reactive({
+        new: [],
+        active: [],
+        resolved: [],
+        closed: []
+    })
+    const loading = ref(true)
+    const idForEdit = ref(null)
+    const editVisible = ref(false)
+    const idForDelete = ref(null)
+    const deleteVisible = ref(false)
+    const fields = [
+        { key: 'title', sortable: true },
+        { key: 'status', sortable: true },
+        { key: 'userFirstName', label: 'First Name', sortable: true },
+        { key: 'userSurname', label: 'Surname', sortable: true }
+    ]
 
-            },
-            showEditBugModal(id) {
-                this.idForEdit = id;
-                this.$bvModal.show("editBugModal");
-            },
-            updateTicket(id, status) {
-                this.axios
-                    .put(`http://localhost:5000/api/bugs/updatestatus/${id}/${status}`)
-            },
-            deleteTicket(id) {
-                this.axios
-                    .delete(`http://localhost:5000/api/bugs/${id}`)
-                    .then(this.getTickets);
-            }
-        },
-        mounted() {
+    const allTickets = computed(() => Object.values(statuses).flat())
 
-            this.$root.$on('bug-added', () => {
-                this.getTickets();
-            });
-            this.$root.$on('bug-updated', () => {
-                this.getTickets();
-            });
+    function capitalize(value) {
+        if (!value) return ''
+        value = value.toString()
+        return value.charAt(0).toUpperCase() + value.slice(1)
+    }
 
-            this.getTickets();
-
+    function onChange(event, newStatus) {
+        if (event.added) {
+            api.put(`/bugs/updatestatus/${event.added.element.bugId}/${newStatus}`)
         }
-    };
+    }
+
+    async function getTickets() {
+        try {
+            const { data } = await api.get('/bugs')
+            for (const status of Object.keys(statuses)) {
+                statuses[status] = data.filter(t => t.status.toLowerCase() === status)
+            }
+        } finally {
+            loading.value = false
+        }
+    }
+
+    function showEditBugModal(id) {
+        idForEdit.value = id
+        editVisible.value = true
+    }
+
+    function showDeleteConfirmation(id) {
+        idForDelete.value = id
+        deleteVisible.value = true
+    }
+
+    async function deleteTicket() {
+        await api.delete(`/bugs/${idForDelete.value}`)
+        await getTickets()
+    }
+
+    onMounted(getTickets)
 </script>
 
 <style>

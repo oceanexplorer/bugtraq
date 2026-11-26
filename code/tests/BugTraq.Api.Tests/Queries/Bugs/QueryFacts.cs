@@ -1,13 +1,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
-using BugTraq.Api.Mappers;
 using BugTraq.Api.Models;
 using BugTraq.Api.Queries;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Moq;
 using Xunit;
 
 namespace BugTraq.Api.Tests.Queries.Bugs
@@ -15,7 +12,6 @@ namespace BugTraq.Api.Tests.Queries.Bugs
     public class QueryFacts
     {
         private DbContextOptions<BugTraqContext> _inMemoryDbOptions;
-        private IMapper _mapper;
 
         public QueryFacts()
         {
@@ -26,10 +22,6 @@ namespace BugTraq.Api.Tests.Queries.Bugs
         
         public class GetBugsQuery : QueryFacts
         {
-            public GetBugsQuery()
-            {
-                _mapper = new MapperConfiguration(cfg => { cfg.AddProfile(new BugProfile()); }).CreateMapper();
-            }
             
             [Fact]
             public async Task ShouldReturnSameNumberOfRecordsAsAdded()
@@ -51,8 +43,8 @@ namespace BugTraq.Api.Tests.Queries.Bugs
                 // Act
                 await using (var dbContext = new BugTraqContext(_inMemoryDbOptions))
                 {
-                    var bugs = await new GetBugs.Handler(dbContext,  _mapper)
-                        .Handle(getBugsQuery, It.IsAny<CancellationToken>());
+                    var bugs = await new GetBugs.Handler(dbContext)
+                        .Handle(getBugsQuery, CancellationToken.None);
                     
                     // Assert
                     bugs.Count.Should().Be(2, "because two records were added to the database so two should have been returned");
@@ -62,10 +54,6 @@ namespace BugTraq.Api.Tests.Queries.Bugs
         
         public class GetBugQuery : QueryFacts
         {
-            public GetBugQuery()
-            {
-                _mapper = new MapperConfiguration(cfg => { cfg.AddProfile(new BugProfile()); }).CreateMapper();
-            }
         
             [Fact]
             public async Task ShouldReturnOnlyOneRecordWithAMatchingId()
@@ -87,8 +75,8 @@ namespace BugTraq.Api.Tests.Queries.Bugs
                 // Act
                 await using (var dbContext = new BugTraqContext(_inMemoryDbOptions))
                 {
-                    var bug = await new GetBug.Handler(dbContext, _mapper)
-                        .Handle(getBugQuery, It.IsAny<CancellationToken>());
+                    var bug = await new GetBug.Handler(dbContext)
+                        .Handle(getBugQuery, CancellationToken.None);
                     
                     // Assert
                     bug.Title.Should().Be(bugOne.Title, "the retrieved bug should be the same as the one we saved.");

@@ -1,11 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using BugTraq.Api.Models;
 using FluentValidation;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -35,24 +33,24 @@ namespace BugTraq.Api.Commands
             public string Status { get; set; }
         }
 
-        public class Handler : AsyncRequestHandler<Command>
+        public class Handler : IRequestHandler<Command>
         {
             private readonly BugTraqContext _context;
-            private readonly IMapper _mapper;
 
-            public Handler(BugTraqContext context, IMapper mapper)
+            public Handler(BugTraqContext context)
             {
                 _context = context;
-                _mapper = mapper;
             }
-            protected override async Task Handle(Command request, CancellationToken cancellationToken)
+            public async Task Handle(Command request, CancellationToken cancellationToken)
             {
-                var existingBug = await _context.Bugs.FindAsync(request.BugId);
+                var existingBug = await _context.Bugs.FindAsync([request.BugId], cancellationToken);
 
                 if (existingBug != null)
                 {
-                    _context.Entry(existingBug).State = EntityState.Modified;
-                    _mapper.Map(request, existingBug);
+                    existingBug.Title = request.Title;
+                    existingBug.Description = request.Description;
+                    existingBug.Status = request.Status;
+                    existingBug.UserId = request.UserId;
                     
                     await _context.SaveChangesAsync(cancellationToken);
                 }

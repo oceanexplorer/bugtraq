@@ -8,47 +8,30 @@
 
         <div class="row">
             <div class="col">
-                <add-user-modal class="float-right"/>
+                <AddUserModal class="float-end" @user-added="loadUsers"/>
             </div>
         </div>
         <div class="row">
             <div class="col">
-                <b-table :fields="fields" :items="users" class="mt-4" hover striped></b-table>
+                <BTable :fields="fields" :items="users" class="mt-4" hover striped/>
             </div>
         </div>
     </div>
 </template>
 
-<script>
-    import AddUserModal from "./AddUserModal";
+<script setup>
+    import { onMounted, ref } from 'vue'
+    import { BTable } from 'bootstrap-vue-next'
+    import AddUserModal from './AddUserModal.vue'
+    import api from '../api'
 
-    export default {
-        name: "UsersTable",
-        components: {
-            AddUserModal
-        },
-        data() {
-            return {
-                fields: ['firstName', 'surname'],
-                users: []
-            }
-        },
-        mounted() {
-            this.$root.$on('user-added', () => {
-                this.loadUsers();
-            });
-            this.loadUsers();
-        },
-        methods: {
-            loadUsers() {
-                let self = this;
-                this.axios
-                    .get('http://localhost:5000/api/users')
-                    .then(function (result) {
-                        self.users = result.data;
-                    })
-            }
-        }
+    const fields = ['firstName', 'surname']
+    const users = ref([])
 
+    async function loadUsers() {
+        const { data } = await api.get('/users')
+        users.value = data
     }
+
+    onMounted(loadUsers)
 </script>

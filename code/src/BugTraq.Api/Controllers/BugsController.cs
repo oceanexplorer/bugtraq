@@ -27,7 +27,8 @@ namespace BugTraq.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<GetBug.Result>> GetBug(int id)
         {
-            return await _mediator.Send(new GetBug.Query(id));
+            var bug = await _mediator.Send(new GetBug.Query(id));
+            return bug is null ? NotFound() : bug;
         }
 
         [HttpPut("UpdateStatus/{id}/{status}")]

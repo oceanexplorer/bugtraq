@@ -1,24 +1,10 @@
-# bugtraq.presentation.vue
+# BugTraq client
 
-## Project setup
-```
-yarn install
-```
+Vue 3 + Vite + bootstrap-vue-next.
 
-### Compiles and hot-reloads for development
+```sh
+npm install     # install dependencies
+npm run dev     # dev server on http://localhost:5173 (proxies /api to :5080)
+npm run build   # production build into dist/
+npm run lint    # ESLint
 ```
-yarn serve
-```
-
-### Compiles and minifies for production
-```
-yarn build
-```
-
-### Lints and fixes files
-```
-yarn lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).

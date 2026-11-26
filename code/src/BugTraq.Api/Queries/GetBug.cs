@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using BugTraq.Api.Models;
 using FluentValidation;
 using MediatR;
@@ -48,19 +46,27 @@ namespace BugTraq.Api.Queries
         public class Handler : IRequestHandler<Query, Result>
         {
             private readonly BugTraqContext _context;
-            private readonly IMapper _mapper;
         
-            public Handler(BugTraqContext context, IMapper mapper)
+            public Handler(BugTraqContext context)
             {
                 _context = context;
-                _mapper = mapper;
             }
             
             public async Task<Result> Handle(Query request, CancellationToken cancellationToken)
             {
-                    return await _mapper
-                    .ProjectTo<Result>(_context.Bugs.Include(e => e.User))
+                return await _context.Bugs
                     .Where(b => b.BugId == request.Id)
+                    .Select(b => new Result
+                    {
+                        BugId = b.BugId,
+                        Title = b.Title,
+                        Description = b.Description,
+                        CreatedDate = b.CreatedDate,
+                        Status = b.Status,
+                        UserId = b.UserId,
+                        UserFirstName = b.User.FirstName,
+                        UserSurname = b.User.Surname
+                    })
                     .FirstOrDefaultAsync(cancellationToken);
             }
         }

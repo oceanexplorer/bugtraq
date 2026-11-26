@@ -6,7 +6,6 @@ using BugTraq.Api.Commands;
 using BugTraq.Api.Models;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Moq;
 using Xunit;
 
 namespace BugTraq.Api.Tests.Commands.Users
@@ -33,8 +32,8 @@ namespace BugTraq.Api.Tests.Commands.Users
                 
                 // Act
                 await using var dbContext = new BugTraqContext(_inMemoryDbOptions);
-                await new AddUser.Handler(dbContext).Handle(userOneCommand,It.IsAny<CancellationToken>());
-                await new AddUser.Handler(dbContext).Handle(userTwoCommand,It.IsAny<CancellationToken>());
+                await new AddUser.Handler(dbContext).Handle(userOneCommand,CancellationToken.None);
+                await new AddUser.Handler(dbContext).Handle(userTwoCommand,CancellationToken.None);
 
                 // Assert
                 dbContext.Users.Count().Should().Be(2, "we added two records to the database");

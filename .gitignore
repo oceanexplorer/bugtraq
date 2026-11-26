@@ -343,3 +343,6 @@ healthchecksdb
 
 # OSX files
 .DS_Store
+
+# Vite build output
+code/src/BugTraq.Api/ClientApp/dist/

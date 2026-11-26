@@ -1,47 +1,22 @@
 <template>
-    <b-form-select
+    <BFormSelect
             :options="users"
             id="user"
             required
             v-model="selectedId"
-    ></b-form-select>
+    />
 </template>
 
-<script>
-    export default {
-        data() {
-            return {
-                users: [{text: 'Select One...', value: null}],
-                selectedId: this.value
-            }
-        },
-        mounted() {
-            this.loadUsers();
-        },
-        watch: {
-            selectedId(updatedValue) {
-                this.$emit('input', updatedValue);
-            },
-            value(updatedValue) {
-                this.selectedId = updatedValue;
-            },
-        },
-        props: ['value'],
-        methods: {
-            loadUsers() {
-                let self = this;
-                this.axios
-                    .get('http://localhost:5000/api/users')
-                    .then(function (result) {
-                        result.data.forEach(user => {
-                            let userOption = self.convertUserToOption(user);
-                            self.users.push(userOption);
-                        });
-                    })
-            },
-            convertUserToOption(user) {
-                return {text: `${user.firstName} ${user.surname}`, value: user.userId};
-            }
-        }
-    }
+<script setup>
+    import { onMounted, ref } from 'vue'
+    import { BFormSelect } from 'bootstrap-vue-next'
+    import api from '../api'
+
+    const selectedId = defineModel({ type: String, default: null })
+    const users = ref([{ text: 'Select One...', value: null }])
+
+    onMounted(async () => {
+        const { data } = await api.get('/users')
+        users.value.push(...data.map(user => ({ text: `${user.firstName} ${user.surname}`, value: user.userId })))
+    })
 </script>

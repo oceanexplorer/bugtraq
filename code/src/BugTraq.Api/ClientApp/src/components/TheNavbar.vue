@@ -1,21 +1,19 @@
 <template>
-    <b-navbar class="mb-3" toggleable="lg" type="dark" variant="info">
-        <b-navbar-brand href="#">
+    <BNavbar class="mb-3" toggleable="lg" variant="info" data-bs-theme="dark">
+        <BNavbarBrand to="/">
             <font-awesome-icon icon="bug"/>
-            <span class="pl-2">BugTraq</span>
-        </b-navbar-brand>
-        <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
-        <b-collapse id="nav-collapse" is-nav>
-            <b-navbar-nav>
-                <b-nav-item href="#" to="/">Bugs</b-nav-item>
-                <b-nav-item href="#" to="/users">Users</b-nav-item>
-            </b-navbar-nav>
-        </b-collapse>
-    </b-navbar>
+            <span class="ps-2">BugTraq</span>
+        </BNavbarBrand>
+        <BNavbarToggle target="nav-collapse"/>
+        <BCollapse id="nav-collapse" is-nav>
+            <BNavbarNav>
+                <BNavItem to="/">Bugs</BNavItem>
+                <BNavItem to="/users">Users</BNavItem>
+            </BNavbarNav>
+        </BCollapse>
+    </BNavbar>
 </template>
 
-<script>
-    export default {
-        name: 'TheNavbar'
-    }
+<script setup>
+    import { BCollapse, BNavbar, BNavbarBrand, BNavbarNav, BNavbarToggle, BNavItem } from 'bootstrap-vue-next'
 </script>

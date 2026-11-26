@@ -1,24 +1,37 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+using BugTraq.Api.Behaviors;
+using BugTraq.Api.Models;
+using FluentValidation;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 
-namespace BugTraq.Api
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddMediatR(cfg =>
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    cfg.RegisterServicesFromAssemblyContaining<Program>();
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+});
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddDbContext<BugTraqContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("BugTraq")));
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.ConfigureKestrel(serverOptions =>
-                        {
-                            // Set properties and call methods on options
-                        })
-                        .UseStartup<Startup>();
-                });
-    }
+var app = builder.Build();
+
+app.UseExceptionHandler();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
 }
+
+app.UseStaticFiles();
+app.MapControllers();
+app.MapHealthChecks("/health");
+app.MapFallbackToFile("index.html");
+
+app.Run();
+
+public partial class Program;

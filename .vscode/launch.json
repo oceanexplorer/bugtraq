@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/BugTraq.Api/bin/Debug/netcoreapp2.2/BugTraq.Api.dll",
+            "program": "${workspaceFolder}/code/src/BugTraq.Api/bin/Debug/net10.0/BugTraq.Api.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/BugTraq.Api",
+            "cwd": "${workspaceFolder}/code/src/BugTraq.Api",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart",
             "launchBrowser": {
@@ -30,7 +30,9 @@
                 }
             },
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5080",
+                "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.SpaProxy"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"
@@ -42,5 +44,5 @@
             "request": "attach",
             "processId": "${command:pickProcess}"
         }
-    ,]
+    ]
 }
